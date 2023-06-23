@@ -1,0 +1,126 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>Дизассемблер x86</title>
+
+<style>
+	html, body {
+		display: block;
+		position: relative;
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		font-family: Consolas;
+	}
+	
+	* {
+		box-sizing: border-box;
+	}
+
+	body {
+		overflow: auto;
+	}
+	
+	.align {
+		border-collapse: collapse;
+	}
+
+	.align > tbody > tr > td {
+		vertical-align: top;
+	}
+	
+	#decompiled {
+		margin-left: 20px;
+	}
+	
+	#decompiled pre {
+		margin: 0;
+	}
+	
+	table tr td input {
+		width: 16px;
+		padding: 0;
+		border: none;
+		font-family: Consolas;
+		font-size: 15px;
+		outline: none;
+		text-align: left;
+		background-color: transparent;
+	}
+	
+	table tr td input:focus {
+		background-color: #AAF;
+	}
+</style>
+
+<script src="js/decoder.js"></script>
+<script src="js/hex-editor.js"></script>
+<script src="js/binary-encoder.js"></script>
+</head>
+<body>
+	<button onclick="load()">Load</button>
+	<button onclick="save()">Save</button>
+	
+	<table class="align">
+		<tr>
+			<td id="hexEditorParent" class="main"></td>
+			<td>
+				<pre id="decompiled"></pre>
+			</td>
+		</tr>
+	</table>
+	
+	<script>
+		var bytes = []
+		
+		function updateEditorData() {
+			hexEditorParent.innerHTML = ''
+			
+			createHexEditor(
+				hexEditorParent,
+				bytes,
+				function(bytes, index) {
+					decompiled.innerHTML = ''
+					decodeX86AndHighlight(decompiled, bytes, index)
+				},
+				function(index) {
+					console.log(index)
+					decompiled.innerHTML = ''
+					decodeX86AndHighlight(decompiled, bytes, index)
+				})
+			
+			decompiled.innerHTML = ''
+			decodeX86AndHighlight(decompiled, bytes, -1)
+		}
+		
+		updateEditorData()
+	</script>
+	
+	<script>
+		function load() {
+			var input = document.createElement('input')
+			input.setAttribute('type', 'file')
+			
+			input.onchange = function(event) {
+				var reader = new FileReader(input)
+				
+				reader.onloadend = function(event) {
+					bytes = Array.from(new Uint8Array(reader.result))
+					updateEditorData()
+				}
+				
+				reader.readAsArrayBuffer(event.target.files[0])
+			}
+			
+			input.click()
+		}
+		
+		function save() {
+			var a = document.createElement('a')
+			a.setAttribute('href', createDownloadLink(bytes))
+			a.click()
+		}
+	</script>
+</body>
+</html>
